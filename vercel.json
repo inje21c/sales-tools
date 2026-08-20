@@ -1,0 +1,5 @@
+{
+  "buildCommand": "echo \"window.APP_CONFIG={supabaseUrl:'$SUPABASE_URL',supabaseAnonKey:'$SUPABASE_ANON_KEY'};\" > config.js",
+  "outputDirectory": ".",
+  "framework": null
+}
