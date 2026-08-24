@@ -4,152 +4,37 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>영업 관리 도구 — ERP 확장판 (거래처·구매·재고·회계)</title>
+<link rel="stylesheet" href="shared/app.css">
 <style>
-  :root {
-    --bg: #0f1115;
-    --card: #171a21;
-    --card2: #1d212b;
-    --border: #2a2e38;
-    --text: #eef0f3;
-    --muted: #9aa1ad;
-    --accent: #4f8cff;
-    --accent-hover: #6ba0ff;
-    --danger: #ff6b6b;
-    --positive: #46c98f;
-    --warn: #ffb648;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    min-height: 100vh;
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
-    padding: 32px 16px 80px;
-  }
-  .wrap { max-width: 1080px; margin: 0 auto; }
-  h1 { font-size: 20px; font-weight: 700; margin: 0 0 16px; }
-  p.desc { color: var(--muted); font-size: 13px; margin: 0 0 24px; line-height: 1.6; }
-
-  .badge-note {
-    display: inline-block;
-    background: rgba(79,140,255,0.12);
-    color: var(--accent);
-    border: 1px solid rgba(79,140,255,0.3);
-    border-radius: 6px;
-    padding: 2px 8px;
-    font-size: 11px;
-    font-weight: 600;
-    margin-bottom: 14px;
-  }
-
-  .tab-bar {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 18px;
-    border-bottom: 1px solid var(--border);
-    flex-wrap: wrap;
-  }
-  .tab-btn {
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid transparent;
-    border-radius: 0;
-    color: var(--muted);
-    padding: 10px 4px;
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: -1px;
-    cursor: pointer;
-  }
-  .tab-btn:hover { color: var(--text); }
-  .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
+  /* erp-tools.html 전용 스타일 */
+  .badge-note { display: inline-block; background: rgba(79,140,255,0.12); color: var(--accent); border: 1px solid rgba(79,140,255,0.3); border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; margin-bottom: 14px; }
   .tab-btn .soon-dot { color: var(--warn); font-size: 10px; margin-left: 3px; }
 
-  .toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-  }
-  .toolbar-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  select, input[type="text"], input[type="tel"] {
-    background: #0f1115;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    padding: 8px 10px;
-    font-size: 13px;
-    outline: none;
-    width: 100%;
-  }
-  select:focus, input:focus { border-color: var(--accent); }
+  .summary .block .value { font-size: 20px; font-weight: 700; }
+  .summary .block .value.income { color: var(--positive); }
+  .summary .block .value.expense { color: var(--danger); }
+  .summary .block .value.profit { color: var(--positive); }
 
-  button {
-    cursor: pointer;
-    border: none;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    padding: 9px 14px;
-    white-space: nowrap;
-  }
-  .btn-primary { background: var(--accent); color: white; }
-  .btn-primary:hover { background: var(--accent-hover); }
-  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); }
-  .btn-ghost:hover { color: var(--text); border-color: var(--accent); }
-  .btn-danger { background: transparent; color: var(--danger); border: 1px solid rgba(255,107,107,0.35); }
-  .btn-danger:hover { background: rgba(255,107,107,0.1); }
-  .btn-small { padding: 5px 8px; font-size: 12px; }
-
-  .table-scroll { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; min-width: 720px; }
+  table { min-width: 720px; }
   th, td { padding: 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
   th { color: var(--muted); font-size: 12px; font-weight: 600; }
-  td.idx-cell { width: 24px; color: var(--muted); text-align: center; }
-  td.action-cell { width: 40px; text-align: center; }
   table input, table select { width: 100%; }
+  table input[type="date"], table input[type="text"] { min-width: 100px; }
+  table input[type="number"] { min-width: 80px; }
+  table select { min-width: 110px; }
+  td.negative { color: var(--danger); font-weight: 600; }
 
-  .save-status { font-size: 12px; color: var(--muted); }
-  .save-status.error { color: var(--danger); }
-  .save-status.ok { color: var(--positive); }
-
-  .placeholder-card {
-    background: var(--card);
-    border: 1px dashed var(--border);
-    border-radius: 12px;
-    padding: 28px;
-    text-align: center;
-  }
+  .placeholder-card { background: var(--card); border: 1px dashed var(--border); border-radius: 12px; padding: 28px; text-align: center; }
   .placeholder-card h2 { font-size: 15px; margin: 0 0 8px; }
   .placeholder-card p { color: var(--muted); font-size: 13px; line-height: 1.6; margin: 0 auto; max-width: 480px; }
   .placeholder-list { text-align: left; max-width: 480px; margin: 16px auto 0; color: var(--muted); font-size: 12px; line-height: 1.8; }
 
   .section-title { font-size: 14px; margin: 0 0 12px; }
-  .po-form-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px 20px;
-  }
-  .po-form-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 12px;
-  }
+  .po-form-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; }
+  .po-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
   .po-form-grid label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
-  .po-form-footer {
-    margin-top: 14px;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 10px;
-  }
-  table input[type="date"], table input[type="text"] { min-width: 100px; }
-  table input[type="number"] { min-width: 80px; }
-  table select { min-width: 110px; }
+  .po-form-footer { margin-top: 14px; display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
+
   .status-text { font-size: 12px; font-weight: 600; white-space: nowrap; }
   .status-text.ordered { color: var(--warn); }
   .status-text.received { color: var(--positive); }
@@ -161,41 +46,12 @@
   .status-text.lot-low { color: var(--danger); }
   .status-text.lot-muted { color: var(--muted); }
 
-  .month-select { display: flex; align-items: center; gap: 8px; }
-  .month-select select { width: auto; }
-
-  .summary {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px 20px;
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .summary .block .label { color: var(--muted); font-size: 12px; margin-bottom: 4px; }
-  .summary .block .value { font-size: 20px; font-weight: 700; }
-  .summary .block .value.income { color: var(--positive); }
-  .summary .block .value.expense { color: var(--danger); }
-  .summary .block .value.profit { color: var(--positive); }
-  .summary .block .value.profit.negative { color: var(--danger); }
-  td.negative { color: var(--danger); font-weight: 600; }
   .lot-chip-list { display: flex; flex-wrap: wrap; gap: 6px; }
   .lot-chip { font-size: 12px; padding: 2px 8px; border-radius: 10px; background: var(--card2); border: 1px solid var(--border); white-space: nowrap; }
   .lot-chip .lot-chip-remaining { font-weight: 600; margin-left: 4px; }
 
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.55);
-    display: flex; align-items: flex-start; justify-content: center;
-    padding: 40px 16px; overflow-y: auto; z-index: 50;
-  }
-  .modal-card {
-    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-    padding: 20px 24px; max-width: 640px; width: 100%;
-  }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; z-index: 50; }
+  .modal-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; max-width: 640px; width: 100%; }
   .modal-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
   .ic-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
   .ic-row input[type="text"] { flex: 1; }
@@ -207,43 +63,7 @@
   .ic-result-card .ic-cost-value { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
   .ic-result-card .ic-sub { font-size: 12px; color: var(--muted); margin-bottom: 10px; line-height: 1.6; }
 
-  .ai-section {
-    margin-top: 24px;
-    padding: 18px 20px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--accent);
-    border-radius: 12px;
-  }
-  .ai-section h2 { font-size: 14px; margin: 0 0 4px; }
-  .ai-hint { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 12px; }
-  .ai-controls { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
-  .ai-prompt-status { font-size: 12px; color: var(--positive); }
-  .ai-prompt-status.error { color: var(--danger); }
-  .ai-live-section { margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--border); }
-  .ai-summary-result {
-    margin-top: 10px;
-    padding: 12px 14px;
-    background: #0f1115;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 13px;
-    line-height: 1.6;
-    white-space: pre-wrap;
-  }
-  .monthly-report-item { margin-top: 10px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-  .monthly-report-item summary { cursor: pointer; padding: 10px 14px; font-size: 13px; font-weight: 600; background: var(--card2); }
-  .monthly-report-item .monthly-report-body { padding: 12px 14px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; background: #0f1115; }
-  .monthly-report-empty { font-size: 12px; color: var(--muted); margin-top: 8px; }
-  .erp-alert-item {
-    margin-top: 8px;
-    padding: 10px 14px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 13px;
-    line-height: 1.5;
-    background: #0f1115;
-  }
+  .erp-alert-item { margin-top: 8px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; line-height: 1.5; background: #0f1115; }
   .erp-alert-item.low_stock { border-color: var(--warn); }
   .erp-alert-item.expiry { border-color: var(--danger); }
   .erp-alert-tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 4px; margin-right: 6px; }
@@ -259,55 +79,12 @@
   .bar-row .bar-fill.income { background: var(--positive); }
   .bar-row .bar-fill.expense { background: var(--danger); }
   .bar-row .bar-value { width: 110px; text-align: right; font-size: 12px; color: var(--text); flex-shrink: 0; }
-
-  .login-screen {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bg);
-    z-index: 100;
-    padding: 24px;
-  }
-  .login-card {
-    width: 100%;
-    max-width: 360px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 32px;
-  }
-  .login-card h1 { font-size: 18px; margin: 0 0 6px; }
-  .login-desc { color: var(--muted); font-size: 13px; margin: 0 0 20px; line-height: 1.5; }
-  .login-card label { display: block; font-size: 12px; color: var(--muted); margin: 14px 0 6px; }
-  .login-card input {
-    width: 100%;
-    background: #0f1115;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 12px;
-    font-size: 14px;
-    color: var(--text);
-    outline: none;
-  }
-  .login-card input:focus { border-color: var(--accent); }
-  .login-card .btn-primary { width: 100%; margin-top: 20px; padding: 12px; font-size: 14px; }
-  .login-status { margin-top: 12px; font-size: 12px; color: var(--muted); min-height: 16px; line-height: 1.5; }
-  .login-status.error { color: var(--danger); }
-
-  .account-bar {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 16px;
-    font-size: 12px;
-    color: var(--muted);
-  }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
+<script src="shared/supabase-init.js"></script>
+<script src="shared/utils.js"></script>
+<script src="shared/auth.js"></script>
 </head>
 <body>
 
@@ -785,96 +562,36 @@
 </div>
 
 <script>
-  // ================== 로그인 (Supabase Auth) — 기존 sales-tools.html과 같은 프로젝트를 공유 ==================
-  const { supabaseUrl, supabaseAnonKey } = window.APP_CONFIG || {};
-  if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'YOUR_SUPABASE_URL') {
-    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#ff6b6b;font-family:sans-serif;font-size:15px;">config.js 파일이 없거나 설정되지 않았습니다. config.example.js를 복사하여 config.js를 만들고 Supabase 정보를 입력해주세요.</div>';
-    throw new Error('config.js not configured');
-  }
-  const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
-
-  async function showApp(email, userId) {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('appScreen').style.display = 'block';
-    document.getElementById('accountEmail').textContent = email;
-    await loadPartners(userId);
-    await loadMasterProducts(userId);
-    await loadPurchaseOrders(userId);
-    await loadApRecords(userId);
-    await loadStockMovements(userId);
-    await loadCashRecords(userId);
-    renderProductMasterTab();
-    renderPurchaseFormOptions();
-    renderSaleFormOptions();
-    renderPurchaseOrderTable();
-    renderApTable();
-    renderInventoryViews();
-    renderAccountingTab();
-    loadErpMonthlyReports(); // 다른 탭 로딩을 막지 않도록 await 없이 백그라운드로 불러옵니다.
-    loadErpStockAlerts(); // 마찬가지로 백그라운드로 불러옵니다.
-    loadErpDailySummary(); // 마찬가지로 백그라운드로 불러옵니다.
-  }
-
-  function showLogin() {
-    document.getElementById('loginScreen').style.display = 'flex';
-    document.getElementById('appScreen').style.display = 'none';
-    document.getElementById('loginPassword').value = '';
-    document.getElementById('partnerStatus').textContent = '';
-  }
-
-  async function checkSession() {
-    const { data } = await supabaseClient.auth.getSession();
-    if (data.session) {
-      showApp(data.session.user.email, data.session.user.id);
-    } else {
-      showLogin();
-    }
-  }
-
-  async function handleLogin() {
-    const email = document.getElementById('loginEmail').value.trim();
-    const password = document.getElementById('loginPassword').value;
-    const statusEl = document.getElementById('loginStatus');
-    const btn = document.getElementById('loginBtn');
-
-    statusEl.textContent = '';
-    statusEl.className = 'login-status';
-
-    if (!email || !password) {
-      statusEl.textContent = '이메일과 비밀번호를 입력해주세요.';
-      statusEl.className = 'login-status error';
-      return;
-    }
-
-    btn.disabled = true;
-    btn.textContent = '로그인 중...';
-
-    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-
-    btn.disabled = false;
-    btn.textContent = '로그인';
-
-    if (error) {
-      statusEl.textContent = '로그인 실패: 이메일 또는 비밀번호를 확인해주세요.';
-      statusEl.className = 'login-status error';
-      return;
-    }
-
-    showApp(data.user.email, data.user.id);
-  }
-
-  async function handleLogout() {
-    await supabaseClient.auth.signOut();
-    showLogin();
-  }
+  const supabaseClient = window.SalesTools.supabase;
+  const { formatNumber, formatWon, formatQty, todayStr, periodOfDate, lotDaysUntilExpiry } = window.SalesTools.utils;
 
   document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('loginPassword').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') handleLogin();
-    });
     initAcctYearMonthSelect();
     initSaleYearMonthSelect();
-    checkSession();
+
+    window.SalesTools.auth.init({
+      onLogin: async (email, userId) => {
+        await loadPartners(userId);
+        await loadMasterProducts(userId);
+        await loadPurchaseOrders(userId);
+        await loadApRecords(userId);
+        await loadStockMovements(userId);
+        await loadCashRecords(userId);
+        renderProductMasterTab();
+        renderPurchaseFormOptions();
+        renderSaleFormOptions();
+        renderPurchaseOrderTable();
+        renderApTable();
+        renderInventoryViews();
+        renderAccountingTab();
+        loadErpMonthlyReports();
+        loadErpStockAlerts();
+        loadErpDailySummary();
+      },
+      onLogout: () => {
+        document.getElementById('partnerStatus').textContent = '';
+      }
+    });
   });
 
   // ================== 탭 전환 ==================
@@ -1285,13 +1002,6 @@
   let purchaseOrders = [];
   let apRecords = [];
 
-  function todayStr() {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  }
-  function formatWon(n) {
-    return Math.round(n || 0).toLocaleString('ko-KR') + '원';
-  }
   function partnerName(id) {
     const p = partners.find(x => x.id === id);
     return p ? (p.name || '(이름 없음)') : '(삭제된 거래처)';
@@ -2016,14 +1726,6 @@
 
   function computeLotRemaining(po) {
     return (po.qty || 0) - computeLotIssued(po.id);
-  }
-
-  function lotDaysUntilExpiry(expDate) {
-    if (!expDate) return null;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const exp = new Date(expDate + 'T00:00:00');
-    return Math.round((exp - today) / 86400000);
   }
 
   // 잔여재고가 있는 로트를 유통기한이 빠른 순으로 정렬 (유통기한 없는 로트는 뒤로)
@@ -2755,13 +2457,6 @@
 
   function acctPeriodKey() {
     return `${acctYear}-${acctMonth}`;
-  }
-
-  function periodOfDate(dateStr) {
-    if (!dateStr) return null;
-    const parts = String(dateStr).split('-');
-    if (parts.length < 2) return null;
-    return `${parseInt(parts[0], 10)}-${parseInt(parts[1], 10)}`;
   }
 
   async function loadCashRecords(userId) {

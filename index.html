@@ -4,391 +4,75 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>영업 관리 도구 (판매관리 · 영업이익 계산기)</title>
+<link rel="stylesheet" href="shared/app.css">
 <style>
-  :root {
-    --bg: #0f1115;
-    --card: #171a21;
-    --card2: #1d212b;
-    --border: #2a2e38;
-    --text: #eef0f3;
-    --muted: #9aa1ad;
-    --accent: #4f8cff;
-    --accent-hover: #6ba0ff;
-    --danger: #ff6b6b;
-    --positive: #46c98f;
-    --warn: #ffb648;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    min-height: 100vh;
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
-    padding: 32px 16px 80px;
-  }
-  .wrap { max-width: 1080px; margin: 0 auto; }
-  h1 { font-size: 20px; font-weight: 700; margin: 0 0 16px; }
-  p.desc { color: var(--muted); font-size: 13px; margin: 0 0 24px; line-height: 1.6; }
-
-  .tab-bar {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 18px;
-    border-bottom: 1px solid var(--border);
-  }
-  .tab-btn {
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid transparent;
-    border-radius: 0;
-    color: var(--muted);
-    padding: 10px 4px;
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: -1px;
-  }
-  .tab-btn:hover { color: var(--text); }
-  .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
-
-  .toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-  }
-  .toolbar-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .month-select {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  select, input[type="text"], input[type="number"], input[type="date"] {
-    background: #0f1115;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    padding: 8px 10px;
-    font-size: 13px;
-    outline: none;
-    width: 100%;
-  }
-  select:focus, input:focus { border-color: var(--accent); }
-
-  button {
-    cursor: pointer;
-    border: none;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    padding: 9px 14px;
-    white-space: nowrap;
-  }
-  .btn-primary { background: var(--accent); color: white; }
-  .btn-primary:hover { background: var(--accent-hover); }
-  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); }
-  .btn-ghost:hover { color: var(--text); border-color: var(--accent); }
-  .btn-danger { background: transparent; color: var(--danger); border: 1px solid rgba(255,107,107,0.35); }
-  .btn-danger:hover { background: rgba(255,107,107,0.1); }
-  .btn-small { padding: 5px 8px; font-size: 12px; }
-
-  .summary {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px 20px;
-    margin-bottom: 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .summary .block .label { color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+  /* index.html 전용 스타일 */
+  .summary { margin-bottom: 24px; }
   .summary .block .value { font-size: 22px; font-weight: 700; }
   .summary .block .value.revenue { color: var(--positive); }
   .summary .block .value.cost { color: var(--danger); }
   .summary .block .value.profit { color: var(--positive); }
-  .summary .block .value.profit.negative { color: var(--danger); }
-  /* 영업이익 탭에서는 매출 값이 "긍정 강조"가 아니라 일반 텍스트여야 하므로 이 탭 안에서만 덮어씁니다 */
   #profitTab .summary .block .value.revenue { color: var(--text); }
 
-  .product-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 20px;
-    margin-bottom: 18px;
-  }
-  .product-head {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 8px;
-    flex-wrap: wrap;
-  }
-  /* 영업이익 탭 카드는 매출 힌트 줄이 추가로 들어가서 살짝 더 여유를 둡니다 */
+  .product-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 18px; }
+  .product-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
   #profitTab .product-head { margin-bottom: 14px; }
-
-  .product-head .name-field {
-    flex: 1;
-    min-width: 160px;
-    font-size: 15px;
-    font-weight: 600;
-  }
-  .stock-field {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: var(--muted);
-    font-size: 12px;
-  }
-  .stock-field input {
-    width: 90px;
-  }
-
-  .stock-status {
-    font-size: 12px;
-    color: var(--muted);
-    margin-bottom: 14px;
-    line-height: 1.6;
-  }
+  .product-head .name-field { flex: 1; min-width: 160px; font-size: 15px; font-weight: 600; }
+  .stock-field { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
+  .stock-field input { width: 90px; }
+  .stock-status { font-size: 12px; color: var(--muted); margin-bottom: 14px; line-height: 1.6; }
   .stock-status b { color: var(--text); }
   .stock-status b.low { color: var(--danger); }
   .stock-status b.ok { color: var(--positive); }
 
-  .import-section {
-    margin-bottom: 14px;
-    padding: 12px;
-    background: var(--card2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-  }
-  .import-title {
-    font-size: 12px;
-    color: var(--muted);
-    margin-bottom: 8px;
-    font-weight: 600;
-  }
+  .import-section { margin-bottom: 14px; padding: 12px; background: var(--card2); border: 1px solid var(--border); border-radius: 10px; }
+  .import-title { font-size: 12px; color: var(--muted); margin-bottom: 8px; font-weight: 600; }
   .lot-name-cell input { min-width: 100px; }
   .lot-remaining-cell { font-weight: 600; }
   .lot-remaining-cell.low { color: var(--danger); }
   .lot-remaining-cell.warn { color: var(--warn); }
   .lot-cell select { min-width: 170px; font-size: 12px; }
-  .lot-fefo-hint {
-    font-size: 10px;
-    color: var(--warn);
-    margin-top: 4px;
-    line-height: 1.4;
-  }
+  .lot-fefo-hint { font-size: 10px; color: var(--warn); margin-top: 4px; line-height: 1.4; }
   .lot-summary-section table { font-size: 12px; }
-  .lot-empty {
-    font-size: 12px;
-    color: var(--muted);
-  }
-  .lot-status-badge {
-    font-size: 11px;
-    padding: 2px 8px;
-    border-radius: 6px;
-    white-space: nowrap;
-  }
+  .lot-empty { font-size: 12px; color: var(--muted); }
+  .lot-status-badge { font-size: 11px; padding: 2px 8px; border-radius: 6px; white-space: nowrap; }
   .lot-status-badge.ok { background: rgba(70, 201, 143, 0.12); color: var(--positive); }
   .lot-status-badge.warn { background: rgba(255, 182, 72, 0.14); color: var(--warn); }
   .lot-status-badge.low { background: rgba(255, 107, 107, 0.12); color: var(--danger); }
   .lot-status-badge.muted { background: rgba(255, 255, 255, 0.06); color: var(--muted); }
 
-  .paste-section {
-    margin-top: 12px;
-    padding: 12px;
-    background: var(--card2);
-    border: 1px dashed var(--border);
-    border-radius: 10px;
-  }
-  .paste-title {
-    font-size: 12px;
-    color: var(--muted);
-    margin-bottom: 4px;
-    font-weight: 600;
-  }
-  .paste-hint {
-    font-size: 11px;
-    color: var(--muted);
-    margin-bottom: 8px;
-    line-height: 1.5;
-  }
-  .paste-section textarea {
-    width: 100%;
-    min-height: 70px;
-    background: #0f1115;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    padding: 8px 10px;
-    font-size: 12px;
-    font-family: ui-monospace, "SF Mono", Menlo, monospace;
-    outline: none;
-    resize: vertical;
-    margin-bottom: 8px;
-  }
+  .paste-section { margin-top: 12px; padding: 12px; background: var(--card2); border: 1px dashed var(--border); border-radius: 10px; }
+  .paste-title { font-size: 12px; color: var(--muted); margin-bottom: 4px; font-weight: 600; }
+  .paste-hint { font-size: 11px; color: var(--muted); margin-bottom: 8px; line-height: 1.5; }
+  .paste-section textarea { width: 100%; min-height: 70px; background: #0f1115; border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 8px 10px; font-size: 12px; font-family: ui-monospace, "SF Mono", Menlo, monospace; outline: none; resize: vertical; margin-bottom: 8px; }
   .paste-section textarea:focus { border-color: var(--accent); }
-  .paste-status {
-    font-size: 12px;
-    margin-top: 8px;
-    color: var(--positive);
-  }
+  .paste-status { font-size: 12px; margin-top: 8px; color: var(--positive); }
   .paste-status.error { color: var(--danger); }
 
-  .ai-section {
-    margin-top: 24px;
-    padding: 18px 20px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--accent);
-    border-radius: 12px;
-  }
-  .ai-section h2 {
-    font-size: 14px;
-    margin: 0 0 4px;
-  }
-  .ai-hint {
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.5;
-    margin-bottom: 12px;
-  }
-  .ai-warning {
-    font-size: 11px;
-    color: var(--danger);
-    background: rgba(255, 90, 90, 0.08);
-    border: 1px solid rgba(255, 90, 90, 0.25);
-    border-radius: 8px;
-    padding: 8px 10px;
-    margin-bottom: 12px;
-    line-height: 1.5;
-  }
-  .ai-controls {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
-  }
+  .ai-warning { font-size: 11px; color: var(--danger); background: rgba(255, 90, 90, 0.08); border: 1px solid rgba(255, 90, 90, 0.25); border-radius: 8px; padding: 8px 10px; margin-bottom: 12px; line-height: 1.5; }
   .ai-controls select { width: auto; }
-  .ai-section textarea {
-    width: 100%;
-    min-height: 220px;
-    background: #0f1115;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    padding: 10px 12px;
-    font-size: 12px;
-    font-family: ui-monospace, "SF Mono", Menlo, monospace;
-    outline: none;
-    resize: vertical;
-    margin-bottom: 8px;
-    line-height: 1.5;
-  }
+  .ai-section textarea { width: 100%; min-height: 220px; background: #0f1115; border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px 12px; font-size: 12px; font-family: ui-monospace, "SF Mono", Menlo, monospace; outline: none; resize: vertical; margin-bottom: 8px; line-height: 1.5; }
   .ai-section textarea:focus { border-color: var(--accent); }
-  .ai-output-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-  }
-  .ai-prompt-status {
-    font-size: 12px;
-    color: var(--positive);
-  }
-  .ai-prompt-status.error { color: var(--danger); }
-  .ai-live-section {
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px dashed var(--border);
-  }
-  .ai-summary-result {
-    margin-top: 10px;
-    padding: 12px 14px;
-    background: #0f1115;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 13px;
-    line-height: 1.6;
-    white-space: pre-wrap;
-  }
-  .monthly-report-item {
-    margin-top: 10px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    overflow: hidden;
-  }
-  .monthly-report-item summary {
-    cursor: pointer;
-    padding: 10px 14px;
-    font-size: 13px;
-    font-weight: 600;
-    background: var(--card2);
-  }
-  .monthly-report-item .monthly-report-body {
-    padding: 12px 14px;
-    font-size: 13px;
-    line-height: 1.6;
-    white-space: pre-wrap;
-    background: #0f1115;
-  }
-  .monthly-report-empty {
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 8px;
-  }
-  .stock-alert-item {
-    margin-top: 8px;
-    padding: 10px 14px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 13px;
-    line-height: 1.5;
-    background: #0f1115;
-  }
+  .ai-output-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+
+  .stock-alert-item { margin-top: 8px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; line-height: 1.5; background: #0f1115; }
   .stock-alert-item.low_stock { border-color: var(--warn); }
   .stock-alert-item.expiry { border-color: var(--danger); }
-  .stock-alert-tag {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 1px 6px;
-    border-radius: 4px;
-    margin-right: 6px;
-  }
+  .stock-alert-tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 4px; margin-right: 6px; }
   .stock-alert-item.low_stock .stock-alert-tag { color: var(--warn); background: rgba(255,182,72,0.12); }
   .stock-alert-item.expiry .stock-alert-tag { color: var(--danger); background: rgba(255,107,107,0.12); }
-  .stock-alert-empty {
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 8px;
-  }
+  .stock-alert-empty { font-size: 12px; color: var(--muted); margin-top: 8px; }
 
-  .revenue-field {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-    color: var(--muted);
-    font-size: 12px;
-  }
+  .revenue-field { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; color: var(--muted); font-size: 12px; }
   .revenue-input-row { display: flex; align-items: center; gap: 6px; }
   .revenue-input-row input { width: 130px; }
   .revenue-hint-row { display: flex; align-items: center; gap: 8px; }
   .revenue-hint { font-size: 11px; color: var(--muted); }
   .revenue-hint.muted-hint { font-style: italic; }
 
-  .table-scroll { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; min-width: 820px; }
+  table { min-width: 820px; }
   th, td { text-align: left; padding: 6px 5px; font-size: 13px; vertical-align: middle; }
   th { color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--border); white-space: nowrap; }
-  td.idx-cell { width: 24px; color: var(--muted); text-align: center; }
   td.name-cell { width: 13%; }
   td.date-cell { width: 12%; }
   td.price-cell { width: 12%; }
@@ -396,7 +80,6 @@
   td.revenue-cell { width: 14%; color: var(--positive); font-weight: 600; white-space: nowrap; }
   td.cost-cell { width: 15%; }
   td.total-cell { width: 15%; color: var(--danger); font-weight: 600; white-space: nowrap; }
-  td.action-cell { width: 40px; text-align: center; }
   table.master-table { min-width: 0; }
   table.master-table input { width: 100%; }
   td.master-threshold-cell { width: 20%; }
@@ -407,16 +90,7 @@
   .add-customer-row { margin-top: 10px; }
   .add-row { margin-top: 10px; }
 
-  .product-foot {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 12px;
-    padding-top: 10px;
-    border-top: 1px dashed var(--border);
-    flex-wrap: wrap;
-    gap: 8px;
-  }
+  .product-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--border); flex-wrap: wrap; gap: 8px; }
   .product-total { font-size: 13px; color: var(--muted); }
   .product-total b { color: var(--text); }
   .product-total b.revenue { color: var(--positive); }
@@ -424,65 +98,13 @@
   .product-total b.profit { color: var(--positive); }
   .product-total b.profit.negative { color: var(--danger); }
 
-  .note {
-    color: var(--muted);
-    font-size: 12px;
-    margin: 0 0 24px;
-    text-align: left;
-    line-height: 1.6;
-  }
-
-  .login-screen {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bg);
-    z-index: 100;
-    padding: 24px;
-  }
-  .login-card {
-    width: 100%;
-    max-width: 360px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 32px;
-  }
-  .login-card h1 { font-size: 18px; margin: 0 0 6px; }
-  .login-desc { color: var(--muted); font-size: 13px; margin: 0 0 20px; line-height: 1.5; }
-  .login-card label { display: block; font-size: 12px; color: var(--muted); margin: 14px 0 6px; }
-  .login-card input {
-    width: 100%;
-    background: #0f1115;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 12px;
-    font-size: 14px;
-    color: var(--text);
-    outline: none;
-  }
-  .login-card input:focus { border-color: var(--accent); }
-  .login-card .btn-primary { width: 100%; margin-top: 20px; padding: 12px; font-size: 14px; }
-  .login-status { margin-top: 12px; font-size: 12px; color: var(--muted); min-height: 16px; line-height: 1.5; }
-  .login-status.error { color: var(--danger); }
-
-  .account-bar {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 16px;
-    font-size: 12px;
-    color: var(--muted);
-  }
-  .save-status { font-size: 12px; color: var(--muted); }
-  .save-status.error { color: var(--danger); }
-  .save-status.ok { color: var(--positive); }
+  .note { color: var(--muted); font-size: 12px; margin: 0 0 24px; text-align: left; line-height: 1.6; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
+<script src="shared/supabase-init.js"></script>
+<script src="shared/utils.js"></script>
+<script src="shared/auth.js"></script>
 </head>
 <body>
 
@@ -670,88 +292,8 @@
 </div>
 
 <script>
-  // ================== 로그인 (Supabase Auth) — 두 탭 공용 ==================
-  const { supabaseUrl, supabaseAnonKey } = window.APP_CONFIG || {};
-  if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'YOUR_SUPABASE_URL') {
-    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#ff6b6b;font-family:sans-serif;font-size:15px;">config.js 파일이 없거나 설정되지 않았습니다. config.example.js를 복사하여 config.js를 만들고 Supabase 정보를 입력해주세요.</div>';
-    throw new Error('config.js not configured');
-  }
-  const supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
-
-  async function showApp(email, userId) {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('appScreen').style.display = 'block';
-    document.getElementById('accountEmail').textContent = email;
-    // 제품 마스터 목록을 가장 먼저 불러와야, 판매관리·영업이익 탭의 제품명 선택 목록이 처음부터 정확하게 표시됩니다.
-    await loadMasterData(userId);
-    // 판매관리 데이터를 그 다음 불러와야, 영업이익 탭의 매출 연동 힌트가 처음부터 정확하게 표시됩니다.
-    await loadUserData(userId);
-    await pcLoadUserData(userId);
-    loadMonthlyReports(); // 다른 탭 로딩을 막지 않도록 await 없이 백그라운드로 불러옵니다.
-    loadStockAlerts(); // 마찬가지로 백그라운드로 불러옵니다.
-    loadDailySummary(); // 마찬가지로 백그라운드로 불러옵니다.
-  }
-
-  function showLogin() {
-    document.getElementById('loginScreen').style.display = 'flex';
-    document.getElementById('appScreen').style.display = 'none';
-    document.getElementById('loginPassword').value = '';
-    document.getElementById('saveStatus').textContent = '';
-    document.getElementById('pcSaveStatus').textContent = '';
-    document.getElementById('masterSaveStatus').textContent = '';
-  }
-
-  async function checkSession() {
-    const { data } = await supabaseClient.auth.getSession();
-    if (data.session) {
-      showApp(data.session.user.email, data.session.user.id);
-    } else {
-      showLogin();
-    }
-  }
-
-  async function handleLogin() {
-    const email = document.getElementById('loginEmail').value.trim();
-    const password = document.getElementById('loginPassword').value;
-    const statusEl = document.getElementById('loginStatus');
-    const btn = document.getElementById('loginBtn');
-
-    statusEl.textContent = '';
-    statusEl.className = 'login-status';
-
-    if (!email || !password) {
-      statusEl.textContent = '이메일과 비밀번호를 입력해주세요.';
-      statusEl.className = 'login-status error';
-      return;
-    }
-
-    btn.disabled = true;
-    btn.textContent = '로그인 중...';
-
-    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-
-    btn.disabled = false;
-    btn.textContent = '로그인';
-
-    if (error) {
-      statusEl.textContent = '로그인 실패: 이메일 또는 비밀번호를 확인해주세요.';
-      statusEl.className = 'login-status error';
-      return;
-    }
-
-    showApp(data.user.email, data.user.id);
-  }
-
-  async function handleLogout() {
-    await supabaseClient.auth.signOut();
-    showLogin();
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('loginPassword').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') handleLogin();
-    });
-  });
+  const supabaseClient = window.SalesTools.supabase;
+  const { formatNumber, formatWon, formatQty, todayStr, periodOfDate, lotDaysUntilExpiry } = window.SalesTools.utils;
 
   // ================== 탭 전환 ==================
   function switchTab(name) {
@@ -764,15 +306,6 @@
     // 다른 탭으로 올 때마다 최신 데이터를 반영해 다시 그립니다 (같은 페이지라 DB 조회 없이 바로 최신값).
     if (name === 'profit') pcRenderAll();
     if (name === 'tracker') renderAll();
-  }
-
-  // ================== 공용 숫자 포맷 ==================
-  function formatNumber(n) {
-    return Math.round(n || 0).toLocaleString('ko-KR');
-  }
-
-  function formatQty(n) {
-    return formatNumber(n) + ' Kg';
   }
 
   // ==========================================================================
@@ -1009,14 +542,6 @@
     return lots[0] || null; // 유통기한이 가장 빠른(그리고 잔여재고가 있는) 로트
   }
 
-  function lotDaysUntilExpiry(expDate) {
-    if (!expDate) return null;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const exp = new Date(expDate + 'T00:00:00');
-    return Math.round((exp - today) / 86400000);
-  }
-
   function lotStatusBadge(lot) {
     if (lot.remaining < 0) return { text: '재고 부족', cls: 'low' };
     if (lot.remaining === 0) return { text: '소진됨', cls: 'muted' };
@@ -1200,13 +725,6 @@
     const product = products.find(p => p.id === productId);
     product.imports.splice(idx, 1);
     renderAll();
-  }
-
-  function periodOfDate(dateStr) {
-    if (!dateStr) return null;
-    const parts = dateStr.split('-');
-    if (parts.length < 2) return null;
-    return `${parseInt(parts[0], 10)}-${parseInt(parts[1], 10)}`;
   }
 
   function sumImportsForPeriod(product, pk) {
@@ -2633,21 +2151,35 @@ ${dataLines}
   }
 
   // ================== 초기화 ==================
-  // 두 탭의 연/월 선택 목록을 먼저 채워둬야, 그 이후에 호출되는 renderAll()/pcRenderAll()이
-  // 정상적인 연/월 값을 읽어올 수 있습니다 (제품 마스터 추가도 내부적으로 두 함수를 호출해요).
-  initYearSelect();
-  initMonthSelect();
-  pcInitYearSelect();
-  pcInitMonthSelect();
+  document.addEventListener('DOMContentLoaded', () => {
+    initYearSelect();
+    initMonthSelect();
+    pcInitYearSelect();
+    pcInitMonthSelect();
 
-  addMasterEntry('제품 A (국내)', '', '');
-  addMasterEntry('제품 B (수입)', '', '');
+    addMasterEntry('제품 A (국내)', '', '');
+    addMasterEntry('제품 B (수입)', '', '');
 
-  addProduct('제품 A (국내)', 'domestic');
-  addProduct('제품 B (수입)', 'import');
-  pcAddProduct('제품 B (수입)');
+    addProduct('제품 A (국내)', 'domestic');
+    addProduct('제품 B (수입)', 'import');
+    pcAddProduct('제품 B (수입)');
 
-  checkSession();
+    window.SalesTools.auth.init({
+      onLogin: async (email, userId) => {
+        await loadMasterData(userId);
+        await loadUserData(userId);
+        await pcLoadUserData(userId);
+        loadMonthlyReports();
+        loadStockAlerts();
+        loadDailySummary();
+      },
+      onLogout: () => {
+        document.getElementById('saveStatus').textContent = '';
+        document.getElementById('pcSaveStatus').textContent = '';
+        document.getElementById('masterSaveStatus').textContent = '';
+      }
+    });
+  });
 </script>
 </body>
 </html>
